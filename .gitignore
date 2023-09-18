@@ -2,3 +2,9 @@
 /binaries
 /coverage*.txt
 /apidocs/*.html
+
+out/
+vendor/
+.idea/
+
+debian/.debhelper
