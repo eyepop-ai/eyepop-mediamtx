@@ -1,0 +1,79 @@
+pipeline {
+
+    agent {
+        label 'linux-amd64'
+    }
+
+    stages {
+        stage('Clone sources') {
+            steps {
+                checkout scmGit(
+                    branches: [[name: '*/*']],
+                    extensions: [
+                        submodule(parentCredentials: true,recursiveSubmodules: true, reference: ''),
+                        [$class: 'WipeWorkspace']
+                    ], 
+                    userRemoteConfigs: [
+                        [
+                            credentialsId: 'deploy_key_eyepop-mediamtx_rsa',
+                            url: 'git@github.com:eyepop-ai/eyepop-mediamtx.git'
+                        ]
+                    ]
+                )
+                script {
+                    gitTag=sh(returnStdout: true, script: "git tag --contains | head -1").trim()
+                }   
+            }
+        }
+
+        stage('Configure') {
+            steps {
+                sh "make vendor"
+            }
+        }
+    
+        stage('Build') {
+            steps {
+                sh "make build"
+            }
+        }
+    
+        stage('Debian build') {
+            when { 
+                 expression {
+                     return gitTag;
+                 }
+            }
+            steps {
+                sh 'uname -a && mkdir -p ./build.debian/linux_amd64/'
+                sh 'DEB_BUILD_OPTIONS="nocheck notest" debuild -us -uc'
+                sh 'mv ../eyepop-mediamtx*.deb ../eyepop-mediamtx*.dsc ../eyepop-mediamtx*.gz ../eyepop-mediamtx*.build ../eyepop-mediamtx*.buildinfo ../eyepop-mediamtx*.changes ./build.debian/linux_amd64/ && ls -la ./build.debian/linux_amd64/'
+            }
+        }
+        stage('Debian publish') {
+            when { 
+                 expression {
+                     return gitTag;
+                 }
+            }
+            steps {
+                withAWS(credentials:'repo-uploader', region: 'us-east-1') {
+                    script {
+                        sh "deb-s3 upload --bucket repo.dev.eyepop.xyz ./build.debian/linux_amd64/*.deb"
+                    }
+                }
+            }
+        }
+   }
+    post {
+        success {
+            script {
+                if (gitTag) {
+                    currentBuild.description = "Release build version (gitTag="+gitTag+")"
+                } else {
+                    currentBuild.description = "Commit build version"
+                }
+            }
+        }
+    }
+}

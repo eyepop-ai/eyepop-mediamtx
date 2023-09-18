@@ -1,0 +1,32 @@
+#!/usr/bin/make -f
+# See debhelper(7) (uncomment to enable)
+# output every command that modifies files on the build system.
+export DH_VERBOSE = 1
+
+
+ROOT_DIR:=$(shell pwd)
+export DEB_HOST_MULTIARCH ?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
+export DEB_HOST_ARCH ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
+export BUILDDIR=out
+export EYEPOP_INSTANCE_SOURCE_ROOT_PATH=$(ROOT_DIR)
+export EYEPOP_INSTANCE_BUILD_ROOT_PATH=${EYEPOP_INSTANCE_SOURCE_ROOT_PATH}/${BUILDDIR}
+
+%:
+	dh $@ --parallel
+
+override_dh_auto_clean:
+	rm -rf ${BUILDDIR}
+
+override_dh_auto_configure:
+	mkdir -p ${BUILDDIR}
+
+override_dh_auto_build:
+	make vendor
+	make build
+
+override_dh_auto_test:
+	make test
+
+override_dh_clean:
+	dh_clean $@
+
