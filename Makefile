@@ -2,7 +2,7 @@ GOCMD=$(shell which go)
 GOTEST=$(GOCMD) test
 GOVET=$(GOCMD) vet
 BINARY_NAME=eyepop-mediamtx
-VERSION?=1.1.0
+VERSION?=1.1.1
 
 GIT_COMMIT := $(shell git rev-list -1 HEAD)
 
