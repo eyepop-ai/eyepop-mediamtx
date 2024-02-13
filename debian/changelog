@@ -1,0 +1,17 @@
+eyepop-mediamtx (1.5.1) UNRELEASED; urgency=medium
+
+  * Fetch upstream 1.5.1 
+
+ -- Torsten Schulz <torsten@eyepop.ai>  Mon, 12 Feb 2024 18:21:13 -0800
+
+eyepop-mediamtx (1.1.1) jammy; urgency=medium
+
+  * Fetch upstream v1.1.1 
+
+ -- Torsten Schulz <torsten@eyepop.ai>  Mon, 12 Feb 2024 18:21:03 -0800
+
+eyepop-mediamtx (1.1.0) jammy; urgency=medium
+
+  * Initial Version
+
+ -- Torsten Schulz <torsten@eyepop.ai>  Wed, 27 Sep 2023 08:52:10 -0700

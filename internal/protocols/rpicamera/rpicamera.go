@@ -22,7 +22,6 @@ const (
 	tempPathPrefix = "/dev/shm/rtspss-embeddedexe-"
 )
 
-//go:embed exe/exe
 var exeContent []byte
 
 func startEmbeddedExe(content []byte, env []string) (*exec.Cmd, error) {

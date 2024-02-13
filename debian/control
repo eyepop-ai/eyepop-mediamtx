@@ -1,0 +1,13 @@
+Source: eyepop-mediamtx
+Standards-Version: 3.9.6
+Homepage: https://github.com/eyepop-ai/eyepop-mediamtx
+Maintainer: Torsten Schulz <torsten@eyepop.ai>
+Build-Depends: debhelper-compat (= 11)
+
+Package: eyepop-mediamtx
+Architecture: any
+Multi-Arch: same
+Depends:
+Description: Eyepop Embedded Media Server
+ Forked from https://github.com/bluenviron/mediamtx
+

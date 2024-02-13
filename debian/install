@@ -1,0 +1,2 @@
+out/bin/eyepop-mediamtx /usr/bin
+out/config/mediamtx.yml.example /usr/share/eyepop-ai/config/mediamtx
