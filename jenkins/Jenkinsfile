@@ -35,9 +35,9 @@ pipeline {
                                             ]
                                         )
                                     }
-                                }
                                 
-                                gitTag=sh(returnStdout: true, script: "git tag --contains | head -1").trim()
+                                    gitTag=sh(returnStdout: true, script: "git tag --contains | head -1").trim()
+                                }
                             }
                         }
 
@@ -105,9 +105,9 @@ pipeline {
                                             ]
                                         )
                                     }
-                                }
                                 
-                                gitTag=sh(returnStdout: true, script: "git tag --contains | head -1").trim()
+                                    gitTag=sh(returnStdout: true, script: "git tag --contains | head -1").trim()
+                                }
                             }
                         }
 
