@@ -8,3 +8,7 @@ vendor/
 .idea/
 
 debian/.debhelper
+debian/eyepop-mediamtx/*
+debian/debhelper-build-stamp
+debian/eyepop-mediamtx.substvars
+debian/files

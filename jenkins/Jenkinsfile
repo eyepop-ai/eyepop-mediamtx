@@ -1,79 +1,183 @@
 pipeline {
 
-    agent {
-        label 'linux-amd64'
+    agent none
+
+    parameters {
+        booleanParam(name: 'ENABLE_DRY_RUN_COMPLETE', defaultValue: false, description: '"Runs" all stages (even conditional ones!) by printing out what would happen (ignores ENABLE_DEB_BUILD_WITHOUT_UPLOAD)')
+        booleanParam(name: 'ENABLE_DEB_BUILD_WITHOUT_UPLOAD', defaultValue: false, description: 'Enable the debian build (without uploading!) for test purposes')
+        string(name: 'GIT_BRANCH', defaultValue: '*/main', description: 'The name of the branch to check out. Remember to change the Jenkins pipeline configuration\'s "Branches to build"!')
     }
 
     stages {
-        stage('Clone sources') {
-            steps {
-                checkout scmGit(
-                    branches: [[name: '*/ep_v1.5.1']],
-                    extensions: [
-                        submodule(parentCredentials: true,recursiveSubmodules: true, reference: ''),
-                        [$class: 'WipeWorkspace']
-                    ], 
-                    userRemoteConfigs: [
-                        [
-                            credentialsId: 'deploy_key_eyepop-mediamtx_rsa',
-                            url: 'git@github.com:eyepop-ai/eyepop-mediamtx.git'
-                        ]
-                    ]
-                )
-                script {
-                    gitTag=sh(returnStdout: true, script: "git tag --contains | head -1").trim()
-                }   
-            }
-        }
+        stage('Parallel builds') {
+            parallel {
+                stage('Build for linux-amd64-jammy-cuda') {
+                    agent { label 'linux-amd64' }
+                    stages {
+                        stage('Clone sources') {
+                            steps {
+                                script {
+                                    if (params.ENABLE_DRY_RUN_COMPLETE) {
+                                        print "DRY RUN: Cloning sources from branch ${params.GIT_BRANCH}"
+                                    }
+                                    else {
+                                        checkout scmGit(
+                                            branches: [[name: "${GIT_BRANCH}"]],
+                                            extensions: [
+                                                submodule(parentCredentials: true,recursiveSubmodules: true, reference: ''),
+                                                [$class: 'WipeWorkspace']
+                                            ], 
+                                            userRemoteConfigs: [
+                                                [
+                                                    credentialsId: 'deploy_key_eyepop-mediamtx_rsa',
+                                                    url: 'git@github.com:eyepop-ai/eyepop-mediamtx.git'
+                                                ]
+                                            ]
+                                        )
+                                    }
+                                
+                                    gitTag=sh(returnStdout: true, script: "git tag --contains | head -1").trim()
+                                }
+                            }
+                        }
 
-        stage('Configure') {
-            steps {
-                sh "make vendor"
-            }
-        }
-    
-        stage('Build') {
-            steps {
-                sh "make build"
-            }
-        }
-    
-        stage('Debian build') {
-            when { 
-                 expression {
-                     return gitTag;
-                 }
-            }
-            steps {
-                sh 'uname -a && mkdir -p ./build.debian/linux_amd64/'
-                sh 'DEB_BUILD_OPTIONS="nocheck notest" debuild -us -uc'
-                sh 'mv ../eyepop-mediamtx*.deb ../eyepop-mediamtx*.dsc ../eyepop-mediamtx*.gz ../eyepop-mediamtx*.build ../eyepop-mediamtx*.buildinfo ../eyepop-mediamtx*.changes ./build.debian/linux_amd64/ && ls -la ./build.debian/linux_amd64/'
-            }
-        }
-        stage('Debian publish') {
-            when { 
-                 expression {
-                     return gitTag;
-                 }
-            }
-            steps {
-                withAWS(credentials:'repo-uploader', region: 'us-east-1') {
-                    script {
-                        sh "deb-s3 upload --bucket repo.dev.eyepop.xyz ./build.debian/linux_amd64/*.deb"
+                        stage('Configure') {
+                            steps {
+                                runShellCommand("make vendor")
+                            }
+                        }
+                    
+                        stage('Build') {
+                            steps {
+                                runShellCommand("make build")
+                            }
+                        }
+                    
+                        stage('Debian build') {
+                            when { 
+                                expression {
+                                    return gitTag || params.ENABLE_DRY_RUN_COMPLETE || params.ENABLE_DEB_BUILD_WITHOUT_UPLOAD;
+                                }
+                            }
+                            steps {
+                                runShellCommand('uname -a && mkdir -p ./build.debian/linux_amd64/')
+                                runShellCommand('DEB_BUILD_OPTIONS="nocheck notest" debuild -b -us -uc')
+                                runShellCommand('mv ../eyepop-mediamtx*.deb ../eyepop-mediamtx*.build ../eyepop-mediamtx*.buildinfo ../eyepop-mediamtx*.changes ./build.debian/linux_amd64/ && ls -la ./build.debian/linux_amd64/')
+                            }
+                        }
+                        stage('Debian publish') {
+                            when {
+                                expression {
+                                    return gitTag || params.ENABLE_DRY_RUN_COMPLETE;
+                                }
+                            }
+                            steps {
+                                withAWS(credentials:'repo-uploader', region: 'us-east-1') {
+                                    script {
+                                        runShellCommand("deb-s3 upload --preserve-versions --bucket repo.dev.eyepop.xyz ./build.debian/linux_amd64/*.deb")
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                stage('Build for linux-aarch64-jammy') {
+                    agent { label 'linux-aarch64' }
+                    stages {
+                        stage('Clone sources') {
+                            steps {
+                                script {
+                                    if (params.ENABLE_DRY_RUN_COMPLETE) {
+                                        print "DRY RUN: Cloning sources from branch ${params.GIT_BRANCH}"
+                                    }
+                                    else {
+                                        checkout scmGit(
+                                            branches: [[name: "${GIT_BRANCH}"]],
+                                            extensions: [
+                                                submodule(parentCredentials: true,recursiveSubmodules: true, reference: ''),
+                                                [$class: 'WipeWorkspace']
+                                            ], 
+                                            userRemoteConfigs: [
+                                                [
+                                                    credentialsId: 'deploy_key_eyepop-mediamtx_rsa',
+                                                    url: 'git@github.com:eyepop-ai/eyepop-mediamtx.git'
+                                                ]
+                                            ]
+                                        )
+                                    }
+                                
+                                    gitTag=sh(returnStdout: true, script: "git tag --contains | head -1").trim()
+                                }
+                            }
+                        }
+
+                        stage('Configure') {
+                            steps {
+                                runShellCommand("make vendor")
+                            }
+                        }
+                    
+                        stage('Build') {
+                            steps {
+                                runShellCommand("make build")
+                            }
+                        }
+                    
+                        stage('Debian build') {
+                            when { 
+                                expression {
+                                    return gitTag || params.ENABLE_DRY_RUN_COMPLETE || params.ENABLE_DEB_BUILD_WITHOUT_UPLOAD;
+                                }
+                            }
+                            steps {
+                                runShellCommand('uname -a && mkdir -p ./build.debian/linux_aarch64/')
+                                runShellCommand('DEB_BUILD_OPTIONS="nocheck notest" debuild -b -us -uc')
+                                runShellCommand('mv ../eyepop-mediamtx*.deb ../eyepop-mediamtx*.build ../eyepop-mediamtx*.buildinfo ../eyepop-mediamtx*.changes ./build.debian/linux_aarch64/ && ls -la ./build.debian/linux_aarch64/')
+                            }
+                        }
+                        stage('Debian publish') {
+                            when {
+                                expression {
+                                    return gitTag || params.ENABLE_DRY_RUN_COMPLETE;
+                                }
+                            }
+                            steps {
+                                withAWS(credentials:'repo-uploader', region: 'us-east-1') {
+                                    script {
+                                        runShellCommand("deb-s3 upload --preserve-versions --bucket repo.dev.eyepop.xyz ./build.debian/linux_aarch64/*.deb")
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
-   }
+    }
     post {
         success {
             script {
+                String baseDescription = "";
+                if (params.ENABLE_DRY_RUN_COMPLETE) {
+                    baseDescription = "DRY RUN: "
+                }
+
                 if (gitTag) {
-                    currentBuild.description = "Release build version (gitTag="+gitTag+")"
+                    currentBuild.description = "${baseDescription}Release build version (gitTag="+gitTag+")"
                 } else {
-                    currentBuild.description = "Commit build version"
+                    currentBuild.description = "${baseDescription}Commit build version"
                 }
             }
         }
+    }
+}
+
+def runShellCommand(String command) {
+    if (params.ENABLE_DRY_RUN_COMPLETE) {
+        // In test mode, just echo the command
+        echo "DRY RUN: ${command}"
+    } else {
+        // In normal mode, execute the command
+        sh command
     }
 }

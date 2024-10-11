@@ -1,3 +1,10 @@
+eyepop-mediamtx (1.5.1-1.0.0) jammy; urgency=medium
+
+  * Added support for aarch64 builds
+  * Switched to binary-only builds
+
+ -- Tyler Stevens <tyler@eyepop.ai>  Fri, 11 Oct 2024 08:53:14 -0700
+
 eyepop-mediamtx (1.5.1) UNRELEASED; urgency=medium
 
   * Fetch upstream 1.5.1 
