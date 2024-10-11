@@ -62,7 +62,7 @@ pipeline {
                             steps {
                                 runShellCommand('uname -a && mkdir -p ./build.debian/linux_amd64/')
                                 runShellCommand('DEB_BUILD_OPTIONS="nocheck notest" debuild -b -us -uc')
-                                runShellCommand('mv ../eyepop-mediamtx*.deb ./build.debian/linux_amd64/ && ls -la ./build.debian/linux_amd64/')
+                                runShellCommand('mv ../eyepop-mediamtx*.deb ../eyepop-mediamtx*.build ../eyepop-mediamtx*.buildinfo ../eyepop-mediamtx*.changes ./build.debian/linux_amd64/ && ls -la ./build.debian/linux_amd64/')
                             }
                         }
                         stage('Debian publish') {
@@ -74,7 +74,7 @@ pipeline {
                             steps {
                                 withAWS(credentials:'repo-uploader', region: 'us-east-1') {
                                     script {
-                                        runShellCommand("deb-s3 upload --bucket repo.dev.eyepop.xyz ./build.debian/linux_amd64/*.deb")
+                                        runShellCommand("deb-s3 upload --preserve-versions --bucket repo.dev.eyepop.xyz ./build.debian/linux_amd64/*.deb")
                                     }
                                 }
                             }
@@ -132,7 +132,7 @@ pipeline {
                             steps {
                                 runShellCommand('uname -a && mkdir -p ./build.debian/linux_aarch64/')
                                 runShellCommand('DEB_BUILD_OPTIONS="nocheck notest" debuild -b -us -uc')
-                                runShellCommand('mv ../eyepop-mediamtx*.deb ./build.debian/linux_aarch64/ && ls -la ./build.debian/linux_aarch64/')
+                                runShellCommand('mv ../eyepop-mediamtx*.deb ../eyepop-mediamtx*.build ../eyepop-mediamtx*.buildinfo ../eyepop-mediamtx*.changes ./build.debian/linux_aarch64/ && ls -la ./build.debian/linux_aarch64/')
                             }
                         }
                         stage('Debian publish') {
@@ -144,7 +144,7 @@ pipeline {
                             steps {
                                 withAWS(credentials:'repo-uploader', region: 'us-east-1') {
                                     script {
-                                        runShellCommand("deb-s3 upload --bucket repo.dev.eyepop.xyz ./build.debian/linux_aarch64/*.deb")
+                                        runShellCommand("deb-s3 upload --preserve-versions --bucket repo.dev.eyepop.xyz ./build.debian/linux_aarch64/*.deb")
                                     }
                                 }
                             }
