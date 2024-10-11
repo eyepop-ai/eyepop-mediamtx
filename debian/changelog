@@ -1,4 +1,4 @@
-eyepop-mediamtx (1.5.1+1.0.0) jammy; urgency=medium
+eyepop-mediamtx (1.5.1-1.0.0) jammy; urgency=medium
 
   * Added support for aarch64 builds
   * Switched to binary-only builds
